@@ -30,3 +30,13 @@ build/
 *.tar
 *.tar.gz
 *.tgz
+
+# Python packaging artifacts
+*.egg-info/
+.eggs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.build/
+dist/
