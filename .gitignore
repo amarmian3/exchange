@@ -1,0 +1,32 @@
+# Visual Studio folders
+.vs/
+.vscode/
+
+# Build outputs
+Debug/
+Release/
+x64/
+x86/
+out/
+build/
+
+# IntelliSense / browsing databases
+*.suo
+*.user
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Environment variables
+.env
+.env.*
+
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
