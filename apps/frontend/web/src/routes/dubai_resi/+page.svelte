@@ -1,8 +1,9 @@
 <script lang="ts">
-	let activeTimeframe = '1D';
-	let activeTab = 'buy';
-	let amount = '5,000';
-	let receive = '3.997';
+	let activeTimeframe = $state<'1D' | '1W' | '1M' | '1Y' | 'ALL'>('1D');
+	let activeTab = $state<'price' | 'yield'>('price');
+	let payment = $state('5,000');
+	let receive = $state('3.997');
+	let tradingMode = $state<'buy' | 'sell'>('buy');
 
     // Tab navigation data
 	const tabs = [
@@ -57,24 +58,43 @@
 	/>
 </svelte:head>
 
-<div class="mx-auto relative min-h-screen mx-auto max-w-screen-2xl bg-black px-4 py-8 sm:px-6 lg:px-8">
-		<!-- Main Content Grid -->
-		<div class="flex flex-col gap-8 lg:flex-row">
-			<!-- Left Column - Chart Section -->
-			<div class="flex-1 space-y-6">
-				<!-- Header with Title and Timeframe Selector -->
-				<div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-					<h1 class="text-2xl font-bold text-white sm:text-3xl">Dubai Residential Index</h1>
+<div class="mx-auto relative min-h-screen max-w-screen-2xl bg-black px-4 py-6 md:px-6 lg:px-8">
+	
+		<!-- Main Grid Layout -->
+		<div class="grid gap-4 lg:grid-cols-[1fr,450px]">
+			<!-- Price Chart Section -->
+			<div
+				class="flex flex-col overflow-hidden rounded-xl border border-azure-20 bg-woodsmoke p-6"
+			>
+				<!-- Tabs -->
+				<div class="mb-6 flex items-center border-b border-azure-20 pb-4">
+					<button
+						onclick={() => (activeTab = 'price')}
+						class="relative pb-4 text-sm font-semibold transition-colors {activeTab === 'price'
+							? 'text-crusta'
+							: 'text-azure-65'}"
+					>
+						Price Chart
+						{#if activeTab === 'price'}
+							<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-crusta"></div>
+						{/if}
+					</button>
+					<button
+						onclick={() => (activeTab = 'yield')}
+						class="ml-6 pb-4 text-sm font-semibold text-azure-65 transition-colors hover:text-slate-gray"
+					>
+						Yield History
+					</button>
 
 					<!-- Timeframe Selector -->
-					<div class="flex gap-1 rounded-lg bg-woodsmoke p-1">
+					<div class="ml-auto flex gap-1 rounded-lg border border-azure-20/50 bg-azure-27/30 p-1">
 						{#each ['1D', '1W', '1M', '1Y', 'ALL'] as timeframe}
 							<button
-								class="rounded-md px-4 py-1.5 text-xs font-medium transition-all {activeTimeframe ===
+								onclick={() => (activeTimeframe = timeframe)}
+								class="rounded-md px-3 py-1 text-xs font-bold transition-all {activeTimeframe ===
 								timeframe
-									? 'bg-crusta text-white shadow-sm'
-									: 'text-azure-65 hover:text-white'}"
-								on:click={() => (activeTimeframe = timeframe)}
+									? 'bg-crusta text-white'
+									: 'text-slate-gray hover:text-azure-65'}"
 							>
 								{timeframe}
 							</button>
@@ -82,216 +102,237 @@
 					</div>
 				</div>
 
-				<!-- Chart Card -->
-				<div class="rounded-2xl border border-azure-20 bg-woodsmoke p-6 shadow-sm sm:p-8">
-					<!-- Tab Navigation -->
-					<div class="border-b border-azure-20">
-						<div class="flex gap-6">
-							<button
-								class="border-b-2 pb-3 text-sm font-medium transition-colors {activeTab === 'price'
-									? 'border-orange-60 text-orange-60'
-									: 'border-transparent text-azure-65 hover:text-white'}"
-								on:click={() => (activeTab = 'price')}
-							>
-								Price
-							</button>
-							<button
-								class="border-b-2 pb-3 text-sm font-medium transition-colors {activeTab === 'yield'
-									? 'border-crusta text-crusta'
-									: 'border-transparent text-azure-65 hover:text-white'}"
-								on:click={() => (activeTab = 'yield')}
-							>
-								Yield
-							</button>
-						</div>
-					</div>
+				<!-- Price Display -->
+				<div class="mb-6 flex items-center gap-4">
+					<h1 class="text-4xl font-bold text-grey-96">AED 1,250.75</h1>
+					<span class="rounded-lg bg-orange-503 px-3 py-1 text-sm font-bold text-spring-green-45">
+						+5.2%
+					</span>
+				</div>
 
-					<!-- Chart Content -->
-					<div class="mt-6 space-y-1">
-						<p class="text-sm text-azure-65">Index Value</p>
-						<div class="flex flex-wrap items-end gap-3">
-							<h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-								AED 1,250.75
-							</h2>
-							<div class="rounded-lg bg-spring-green-45/10 px-2 py-0.5">
-								<span class="text-sm font-medium text-spring-green-45">+5.2% (Last 1D)</span>
-							</div>
-						</div>
-					</div>
+				<!-- Chart -->
+				<div class="relative h-[400px] overflow-hidden rounded-lg bg-woodsmoke md:h-[487px]">
+					<svg
+						class="h-full w-full"
+						viewBox="0 0 870 487"
+						fill="none"
+						xmlns="http://www.w3.org/2000/svg"
+						preserveAspectRatio="none"
+					>
+						<defs>
+							<linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stop-color="#FF8C42" stop-opacity="0.2" />
+								<stop offset="100%" stop-color="#FF8C42" stop-opacity="0" />
+							</linearGradient>
+						</defs>
+						<path
+							d="M0 454.067C36.25 432.444 72.5 416.228 108.75 405.417C145 394.605 181.25 383.794 217.5 372.983C253.75 362.172 290 345.955 326.25 324.333C362.5 302.711 398.75 275.683 435 243.25C471.25 210.817 507.5 200.005 543.75 210.817C580 221.628 616.25 210.817 652.5 178.383C688.75 145.95 725 135.139 761.25 145.95C797.5 156.761 833.75 145.95 870 113.517V486.5H0V454.067Z"
+							fill="url(#chartGradient)"
+						/>
+						<path
+							d="M0 454.067C36.25 432.444 72.5 416.228 108.75 405.417C145 394.606 181.25 383.794 217.5 372.983C253.75 362.172 290 345.956 326.25 324.333C362.5 302.711 398.75 275.683 435 243.25C471.25 210.817 507.5 200.005 543.75 210.817C580 221.628 616.25 210.817 652.5 178.383C688.75 145.95 725 135.139 761.25 145.95C797.5 156.761 833.75 145.95 870 113.517"
+							stroke="#FF8C42"
+							stroke-width="3"
+							vector-effect="non-scaling-stroke"
+						/>
+					</svg>
 
-					<!-- Chart SVG -->
-					<div class="mt-8">
-						<svg
-							class="h-full w-full"
-							viewBox="0 0 820 256"
-							fill="none"
-							xmlns="http://www.w3.org/2000/svg"
-							preserveAspectRatio="none"
-						>
-							<defs>
-								<linearGradient
-									id="chartGradient"
-									x1="0"
-									y1="17.0667"
-									x2="0"
-									y2="256.001"
-									gradientUnits="userSpaceOnUse"
-								>
-									<stop stop-color="#FC8337" stop-opacity="0.2" />
-									<stop offset="1" stop-color="#FC8337" stop-opacity="0" />
-								</linearGradient>
-							</defs>
-							<!-- Gradient Fill -->
-							<path
-								opacity="0.5"
-								d="M0 230.4C49.1598 230.4 81.933 187.734 147.479 196.267C213.026 204.8 245.799 153.6 327.732 136.534C409.665 119.467 426.052 162.134 491.598 102.4C557.144 42.6667 589.918 85.3335 655.464 68.2668C721.01 51.2001 737.397 34.1334 819.33 17.0667V256.001H0V230.4Z"
-								fill="url(#chartGradient)"
-							/>
-							<!-- Line -->
-							<path
-								d="M0 230.4C49.1598 230.4 81.933 187.734 147.479 196.267C213.026 204.8 245.799 153.6 327.732 136.534C409.665 119.467 426.052 162.134 491.598 102.4C557.144 42.6667 589.918 85.3335 655.464 68.2668C721.01 51.2001 737.397 34.1334 819.33 17.0667"
-								stroke="#FC8337"
-								stroke-width="3.34464"
-								stroke-linecap="round"
-							/>
-						</svg>
-
-						<!-- X-Axis Labels -->
-						<div class="mt-6 flex justify-between text-xs text-azure-65">
-							<span>Jan 1</span>
-							<span>Jan 5</span>
-							<span>Jan 10</span>
-							<span>Jan 15</span>
-							<span>Jan 20</span>
-							<span>Jan 25</span>
-							<span>Jan 30</span>
-						</div>
+					<!-- Time Labels [needs to change dependant on time controls]-->
+					<div class="absolute bottom-0 left-0 right-0 flex justify-between px-4 pb-2 text-xs">
+						{#each ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '21:00'] as time}
+							<span class="font-medium text-azure-65">{time}</span>
+						{/each}
 					</div>
 				</div>
 			</div>
 
-			<!-- Right Column - Trade Section -->
-			<div class="w-full space-y-8 lg:w-[450px]">
-				<div class="space-y-6">
-					<h2 class="text-2xl font-bold text-white">Trade</h2>
+			<!-- Trading Panel -->
+			<div class="flex flex-col overflow-hidden rounded-xl border border-azure-20 bg-woodsmoke">
+				<!-- Buy/Sell Toggle -->
+				<div class="border-b border-azure-20 p-5">
+					<div class="flex gap-1 rounded-lg bg-azure-27/30 p-1">
+						<button
+							onclick={() => (tradingMode = 'buy')}
+							class="flex-1 rounded-md py-2 text-sm font-bold transition-all {tradingMode === 'buy'
+								? 'bg-crusta text-white'
+								: 'text-slate-gray hover:text-azure-65'}"
+						>
+							Buy
+						</button>
+						<button
+							onclick={() => (tradingMode = 'sell')}
+							class="flex-1 rounded-md py-2 text-sm font-bold transition-all {tradingMode === 'sell'
+								? 'bg-crusta text-white'
+								: 'text-slate-gray hover:text-azure-65'}"
+						>
+							Sell
+						</button>
+					</div>
 
-					<!-- Trade Card -->
-					<div class="rounded-2xl border border-azure-20 bg-woodsmoke p-6 shadow-sm">
-						<!-- Buy/Sell Toggle -->
-						<div class="mb-6 flex gap-1 rounded-lg bg-azure-5 p-1">
-							<button
-								class="flex-1 rounded-md py-2 text-sm font-semibold transition-all {activeTab ===
-								'buy'
-									? 'bg-crusta text-white'
-									: 'text-azure-65 hover:text-white'}"
-								on:click={() => (activeTab = 'buy')}
-							>
-								Buy
-							</button>
-							<button
-								class="flex-1 rounded-md py-2 text-sm font-medium transition-all {activeTab ===
-								'sell'
-									? 'bg-crusta text-white'
-									: 'text-azure-65 hover:text-white'}"
-								on:click={() => (activeTab = 'sell')}
-							>
-								Sell
-							</button>
-						</div> 
-
-						<!-- Amount Input -->
-						<div class="mb-6 space-y-2">
-							<span class="text-xs text-azure-65">Amount</span>
+					<!-- Input Fields -->
+					<div class="mt-5 space-y-4">
+						<!-- Payment Amount -->
+						<div>
+							<span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-gray">
+								Payment Amount
+							</span>
 							<div class="relative">
 								<input
 									type="text"
-									bind:value={amount}
-									class="w-full rounded-lg border border-azure-27 bg-transparent px-4 py-3 text-lg font-medium text-white placeholder-azure-65 focus:border-crusta focus:outline-none focus:ring-1 focus:ring-crusta"
+									bind:value={payment}
+									class="w-full rounded-lg border border-azure-27 bg-transparent px-4 py-3 text-lg font-medium text-white focus:border-crusta focus:outline-none focus:ring-1 focus:ring-crusta"
 								/>
-								<span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-azure-65"
-									>USDC</span
+								<span
+									class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-azure-65"
 								>
+									USDC
+								</span>
 							</div>
 						</div>
 
-						<!-- Receive Input -->
-						<div class="mb-6 space-y-2">
-							<span class="text-xs text-azure-65">Receive</span>
+						<!-- Receive Amount -->
+						<div>
+							<span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-gray">
+								Receive (Estimated)
+							</span>
 							<div class="relative">
 								<input
 									type="text"
 									bind:value={receive}
-									class="w-full rounded-lg border border-azure-27 bg-transparent px-4 py-3 text-lg font-medium text-white placeholder-azure-65 focus:border-orange-60 focus:outline-none focus:ring-1 focus:ring-orange-60"
+									class="w-full rounded-lg border border-azure-27 bg-transparent px-4 py-3 text-lg font-medium text-white focus:border-crusta focus:outline-none focus:ring-1 focus:ring-crusta"
 								/>
-								<span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-azure-65"
-									>REI</span
+								<span
+									class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-azure-65"
 								>
+									REI
+								</span>
 							</div>
 						</div>
 
 						<!-- Buy Button -->
 						<button
-							class="w-full rounded-lg bg-crusta py-3.5 text-base font-bold text-white shadow-lg"
+							class="w-full rounded-lg bg-crusta px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-crusta/20 transition-all hover:bg-crusta/90 hover:shadow-xl hover:shadow-crusta/30"
 						>
 							Buy Index Token
 						</button>
 					</div>
+				</div>
 
-					<!-- Stats Card -->
-					<div class="flex gap-1 rounded-lg bg-woodsmoke p-4">
-						<div class="flex-1 space-y-1">
-							<p class="text-sm font-medium text-white/60">Number of properties</p>
-							<p class="text-base font-bold text-white">36</p>
+				<!-- Order Book -->
+				<div class="flex-1 overflow-hidden p-5">
+					<div class="mb-3.5 flex items-center justify-between">
+						<h3 class="text-xs font-bold uppercase tracking-wider text-slate-gray">Order Book</h3>
+						<svg
+							width="18"
+							height="22"
+							viewBox="0 0 18 22"
+							fill="none"
+							class="cursor-pointer text-azure-65 hover:text-slate-gray"
+						>
+							<path
+								d="M8.25 17.75V13.25H9.75V14.75H15.75V16.25H9.75V17.75H8.25ZM2.25 16.25V14.75H6.75V16.25H2.25ZM5.25 13.25V11.75H2.25V10.25H5.25V8.75H6.75V13.25H5.25ZM8.25 11.75V10.25H15.75V11.75H8.25ZM11.25 8.75V4.25H12.75V5.75H15.75V7.25H12.75V8.75H11.25ZM2.25 7.25V5.75H9.75V7.25H2.25Z"
+								fill="currentColor"
+							/>
+						</svg>
+					</div>
+
+					<!-- Column Headers -->
+					<div class="mb-2 grid grid-cols-3 gap-4 px-1 text-[10px] font-bold uppercase text-azure-65">
+						<div>Price (AED)</div>
+						<div class="text-right">Size (REI)</div>
+						<div class="text-right">Total</div>
+					</div>
+
+					<!-- Sell Orders -->
+					<div class="mb-2 space-y-0.5">
+						{#each [
+							{ price: '1,254.30', size: '12.45', total: '15.6k', width: '65%' },
+							{ price: '1,253.15', size: '4.20', total: '5.2k', width: '25%' },
+							{ price: '1,251.80', size: '1.82', total: '2.2k', width: '13%' }
+						] as order}
+							<div class="relative grid grid-cols-3 gap-4 rounded px-1 py-1">
+								<div
+									class="absolute right-0 top-0 h-full bg-red/10"
+									style="width: {order.width}"
+								></div>
+								<div class="relative z-10 text-[11px] font-semibold text-red">
+									{order.price}
+								</div>
+								<div class="relative z-10 text-right text-[11px] text-slate-gray">{order.size}</div>
+								<div class="relative z-10 text-right text-[11px] text-slate-gray">{order.total}</div>
+							</div>
+						{/each}
+					</div>
+
+					<!-- Spread -->
+					<div
+						class="my-2 flex items-center justify-between rounded-lg border-y border-azure-15 bg-azure-27/30 px-3 py-2.5"
+					>
+						<div>
+							<div class="text-[9px] font-bold uppercase text-azure-65">Best Ask</div>
+							<div class="text-xs font-bold text-red">1,251.80</div>
 						</div>
-						<div class="w-px bg-cyan-21"></div>
-						<div class="flex-1 space-y-1 text-right">
-							<p class="text-sm font-medium text-white/60">Investors</p>
-							<p class="text-base font-bold text-white">5,000+</p>
+						<div class="text-center">
+							<div class="text-[9px] font-bold uppercase text-azure-65">Spread</div>
+							<div class="text-[10px] font-bold text-azure-84">1.05 (0.08%)</div>
 						</div>
+						<div class="text-right">
+							<div class="text-[9px] font-bold uppercase text-azure-65">Best Bid</div>
+							<div class="text-xs font-bold text-spring-green-45">1,250.75</div>
+						</div>
+					</div>
+
+					<!-- Buy Orders -->
+					<div class="space-y-0.5">
+						{#each [
+							{ price: '1,250.75', size: '2.50', total: '3.1k', width: '16%' },
+							{ price: '1,249.20', size: '15.00', total: '18.7k', width: '90%' },
+							{ price: '1,248.50', size: '8.95', total: '11.1k', width: '49%' }
+						] as order}
+							<div class="relative grid grid-cols-3 gap-4 rounded px-1 py-1">
+								<div
+									class="absolute right-0 top-0 h-full bg-spring-green-45/10"
+									style="width: {order.width}"
+								></div>
+								<div class="relative z-10 text-[11px] font-semibold text-spring-green-45">
+									{order.price}
+								</div>
+								<div class="relative z-10 text-right text-[11px] text-slate-gray">{order.size}</div>
+								<div class="relative z-10 text-right text-[11px] text-slate-gray">{order.total}</div>
+							</div>
+						{/each}
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Index Overview Section Needs to be linked to backend -->
-		<div class="mt-12 space-y-6">
-			<h2 class="text-xl font-bold tracking-tight text-white sm:text-2xl">Index Overview</h2>
-
-			<!-- Overview Cards Grid -->
-			<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-				<!-- Market Cap -->
-				<div class="rounded-xl bg-woodsmoke p-5 space-y-2">
-					<p class="text-sm font-medium text-white/60">Market Cap</p>
-					<p class="text-2xl font-bold text-white">$45.8M</p>
+		<!-- Statistics Cards -->
+		<div class="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+			{#each [
+				{ label: 'Number of properties', value: '36', color: 'text-grey-96' },
+				{ label: 'Total Investors', value: '5,000+', color: 'text-grey-96' },
+				{ label: 'Index Market Cap', value: 'AED 145M', color: 'text-grey-96' },
+				{ label: 'Avg. Annual Yield', value: '8.4%', color: 'text-spring-green-45' },
+				{ label: '24h Trading Volume', value: 'AED 4.2M', color: 'text-grey-96' }
+			] as stat}
+				<div class="rounded-xl border border-azure-15 bg-woodsmoke p-4">
+					<div
+						class="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-gray"
+					>
+						{stat.label}
+					</div>
+					<div class="text-2xl font-bold {stat.color}">{stat.value}</div>
 				</div>
-
-				<!-- Net Yield -->
-				<div class="rounded-xl bg-woodsmoke p-5 space-y-2">
-					<p class="text-sm font-medium text-white/60">Net Yield</p>
-					<p class="text-2xl font-bold text-white">7.2%</p>
-				</div>
-
-				<!-- Projected Annual Return -->
-				<div class="rounded-xl bg-woodsmoke p-5 space-y-2">
-					<p class="text-sm font-medium text-white/60">Projected Annual Return</p>
-					<p class="text-2xl font-bold text-white">11.4%</p>
-				</div>
-
-				<!-- Tokens sold/available -->
-				<div class="rounded-xl bg-woodsmoke p-5 space-y-2">
-					<p class="text-sm font-medium text-white/60">Tokens sold/available</p>
-					<p class="text-2xl font-bold text-white">20,000/60,000</p>
-				</div>
-			</div>
+			{/each}
 		</div>
 
-    <!-- Properties Section -->
+	<!-- Properties Section -->
     <div class="border-b border-white/80 mt-20">
 		<nav class="flex items-start overflow-auto">
 			{#each tabs as tab, index}
 				<button
 					type="button"
-					on:click={() => handleTabClick(tab.id)}
+					onclick={() => handleTabClick(tab.id)}
 					class="flex flex-col items-start border-b-2 px-1 py-4 transition-colors {index > 0
 						? 'ml-8'
 						: ''} {activeTabId === tab.id

@@ -41,7 +41,7 @@
 	];
 </script>
 
-<div class="mx-auto max-w-[1440px] px-4 py-16 sm:px-8 lg:px-28">
+<div class="mx-auto max-w-screen-2xl px-4 py-16 sm:px-8 lg:px-28">
 	<div class="flex flex-col gap-10">
 		<!-- Header Section -->
 		<div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-0">

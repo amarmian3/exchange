@@ -46,7 +46,8 @@ export default {
 				'woodsmoke': '#151719',
 				'azure-20': '#253240',
 				'azure-5': '#0B0C0E',
-				'cyan-21': '#234248'
+				'cyan-21': '#234248',
+				'red': '#F43F5E'
 			},
 			fontFamily: {
 				'inter': ['Inter', '-apple-system', 'Roboto', 'Helvetica', 'sans-serif'],
