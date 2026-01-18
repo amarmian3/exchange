@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\book.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\order.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\c_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{73FC151B-1966-3322-B627-9510AD817ACA}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
