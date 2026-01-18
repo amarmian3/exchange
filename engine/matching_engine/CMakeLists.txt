@@ -22,6 +22,18 @@ target_include_directories(matching_engine PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+# ---- Output locations (consistent across platforms) ----
+# Windows (multi-config): build/<Config>/
+# macOS/Linux (single-config): build/
+set_target_properties(matching_engine PROPERTIES
+  OUTPUT_NAME "matching_engine"
+
+  # Put DLL/.so/.dylib in predictable places:
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+)
+
 set_property(TARGET matching_engine PROPERTY CXX_STANDARD 20)
 
 target_compile_definitions(matching_engine PRIVATE ME_BUILD_DLL)

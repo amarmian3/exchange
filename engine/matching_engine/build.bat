@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion     
 
 set BUILD_DIR=build
 set CONFIG=Release
