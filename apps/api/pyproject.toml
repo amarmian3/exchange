@@ -6,4 +6,25 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.127.1",
+    "matching-engine",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+    "sqlalchemy>=2.0.45",
+    "uvicorn[standard]>=0.40.0",
 ]
+
+[tool.uv.sources]
+matching-engine = { path = "../../engine/matching_engine/python" }
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+exchange-api = "api.cli:main"
