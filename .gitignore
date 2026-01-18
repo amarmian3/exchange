@@ -19,9 +19,7 @@ build/
 *.VC.opendb
 
 # Environment variables
-.env
-.env.*
-
+*.env
 
 # Archives
 *.zip
@@ -33,7 +31,7 @@ build/
 
 # Python packaging artifacts
 *.egg-info/
-.eggs/
-__pycache__/
-.build/
-dist/
+*.eggs/
+*__pycache__/
+*.build/
+*dist/
