@@ -7,7 +7,6 @@ Debug/
 x64/
 x86/
 out/
-build/
 
 # IntelliSense / browsing databases
 *.suo
