@@ -5,3 +5,5 @@ out/
 
 *.dll
 *CMakeCache.txt
+*.egg-info/
+*.egg
