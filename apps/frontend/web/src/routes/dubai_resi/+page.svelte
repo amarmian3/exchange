@@ -1,24 +1,54 @@
 <script lang="ts">
-	let activeTimeframe = $state<'1D' | '1W' | '1M' | '1Y' | 'ALL'>('1D');
-	let activeTab = $state<'price' | 'yield'>('price');
-	let payment = $state('5,000');
-	let receive = $state('3.997');
-	let tradingMode = $state<'buy' | 'sell'>('buy');
+	// ---- Timeframes ----
+	const timeframes = ['1D', '1W', '1M', '1Y', 'ALL'] as const;
+	type Timeframe = (typeof timeframes)[number];
 
-    // Tab navigation data
+	// ---- Tab navigation (bottom of page) ----
 	const tabs = [
 		{ id: 'underlying-assets', label: 'Underlying Assets' },
 		{ id: 'order-book', label: 'Order Book' },
 		{ id: 'details', label: 'Details' },
 		{ id: 'financials', label: 'Financials' },
 		{ id: 'history', label: 'History' }
-	];
+	] as const;
 
-	let activeTabId = 'underlying-assets';
+	type TabId = (typeof tabs)[number]['id'];
 
-	function handleTabClick(tabId: string) {
-		activeTabId = tabId;
-	}
+	// ---- States ----
+	let activeTimeframe = $state<Timeframe>('1D');
+	let activeTab = $state<'price' | 'yield'>('price');
+	let payment = $state('5,000');
+	let receive = $state('3.997');
+	let tradingMode = $state<'buy' | 'sell'>('buy');
+	let activeTabId = $state<TabId>('underlying-assets');
+
+	// ---- Chart typing ----
+	type ChartType =
+		| 'price-1D'
+		| 'price-1W'
+		| 'price-1M'
+		| 'price-1Y'
+		| 'price-ALL'
+		| 'yield-1D'
+		| 'yield-1W'
+		| 'yield-1M'
+		| 'yield-1Y'
+		| 'yield-ALL';
+
+	// Derived values in runes mode (call with activeChart() in markup)
+	const activeChart = $derived(() => `${activeTab}-${activeTimeframe}` as ChartType);
+
+	// ---- Time labels per timeframe ----
+	const timeLabelsMap: Record<Timeframe, string[]> = {
+		'1D': ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '21:00'],
+		'1W': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+		'1M': ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+		'1Y': ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
+		'ALL': ['2020', '2021', '2022', '2023', '2024', '2025']
+	};
+
+	// Derived (call with activeLabels() in markup)
+	const activeLabels = $derived(() => timeLabelsMap[activeTimeframe]);
 
 	// Property data
 	const properties = [
@@ -59,18 +89,16 @@
 </svelte:head>
 
 <div class="mx-auto relative min-h-screen max-w-screen-2xl bg-black px-4 py-6 md:px-6 lg:px-8">
-	
 		<!-- Main Grid Layout -->
 		<div class="grid gap-4 lg:grid-cols-[1fr,450px]">
 			<!-- Price Chart Section -->
-			<div
-				class="flex flex-col overflow-hidden rounded-xl border border-azure-20 bg-woodsmoke p-6"
-			>
+			<div class="flex flex-col overflow-hidden rounded-xl border border-azure-20 bg-woodsmoke p-6">
 				<!-- Tabs -->
 				<div class="mb-6 flex items-center border-b border-azure-20 pb-4">
 					<button
 						onclick={() => (activeTab = 'price')}
-						class="relative pb-4 text-sm font-semibold transition-colors {activeTab === 'price'
+						class="relative pb-4 text-sm font-semibold transition-colors 
+						{activeTab === 'price'
 							? 'text-crusta'
 							: 'text-azure-65'}"
 					>
@@ -81,14 +109,20 @@
 					</button>
 					<button
 						onclick={() => (activeTab = 'yield')}
-						class="ml-6 pb-4 text-sm font-semibold text-azure-65 transition-colors hover:text-slate-gray"
+						class="ml-6 relative pb-4 text-sm font-semibold transition-colors
+							{activeTab === 'yield' 
+							? 'text-crusta' 
+							: 'text-azure-65'}"
 					>
-						Yield History
+					Yield History
+					{#if activeTab === 'yield'}
+						<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-crusta"></div>
+					{/if}
 					</button>
 
 					<!-- Timeframe Selector -->
 					<div class="ml-auto flex gap-1 rounded-lg border border-azure-20/50 bg-azure-27/30 p-1">
-						{#each ['1D', '1W', '1M', '1Y', 'ALL'] as timeframe}
+						{#each timeframes as timeframe}
 							<button
 								onclick={() => (activeTimeframe = timeframe)}
 								class="rounded-md px-3 py-1 text-xs font-bold transition-all {activeTimeframe ===
@@ -102,45 +136,104 @@
 					</div>
 				</div>
 
-				<!-- Price Display -->
-				<div class="mb-6 flex items-center gap-4">
-					<h1 class="text-4xl font-bold text-grey-96">AED 1,250.75</h1>
-					<span class="rounded-lg bg-orange-503 px-3 py-1 text-sm font-bold text-spring-green-45">
-						+5.2%
-					</span>
-				</div>
+				<div class="relative overflow-hidden bg-woodsmoke">
+					{#if activeTab === 'price'}
+						<!-- Price Display -->
+						<div class="mb-6 flex items-center gap-4">
+							<h1 class="text-4xl font-bold text-grey-96">AED 1,250.75</h1>
+							<span class="rounded-lg bg-orange-503 px-3 py-1 text-sm font-bold text-spring-green-45">
+								+5.2%
+							</span>
+						</div>
 
-				<!-- Chart -->
-				<div class="relative h-[400px] overflow-hidden rounded-lg bg-woodsmoke md:h-[487px]">
-					<svg
-						class="h-full w-full"
-						viewBox="0 0 870 487"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg"
-						preserveAspectRatio="none"
-					>
-						<defs>
-							<linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-								<stop offset="0%" stop-color="#FF8C42" stop-opacity="0.2" />
-								<stop offset="100%" stop-color="#FF8C42" stop-opacity="0" />
-							</linearGradient>
-						</defs>
-						<path
-							d="M0 454.067C36.25 432.444 72.5 416.228 108.75 405.417C145 394.605 181.25 383.794 217.5 372.983C253.75 362.172 290 345.955 326.25 324.333C362.5 302.711 398.75 275.683 435 243.25C471.25 210.817 507.5 200.005 543.75 210.817C580 221.628 616.25 210.817 652.5 178.383C688.75 145.95 725 135.139 761.25 145.95C797.5 156.761 833.75 145.95 870 113.517V486.5H0V454.067Z"
-							fill="url(#chartGradient)"
-						/>
-						<path
-							d="M0 454.067C36.25 432.444 72.5 416.228 108.75 405.417C145 394.606 181.25 383.794 217.5 372.983C253.75 362.172 290 345.956 326.25 324.333C362.5 302.711 398.75 275.683 435 243.25C471.25 210.817 507.5 200.005 543.75 210.817C580 221.628 616.25 210.817 652.5 178.383C688.75 145.95 725 135.139 761.25 145.95C797.5 156.761 833.75 145.95 870 113.517"
-							stroke="#FF8C42"
-							stroke-width="3"
-							vector-effect="non-scaling-stroke"
-						/>
-					</svg>
+						<!-- PRICE chart -->
+						<div class="relative overflow-hidden rounded-lg bg-woodsmoke">
+							{#if activeChart() === 'price-1D'}
+								<!-- PRICE 1D -->
+								<svg class="h-full w-full" viewBox="0 0 870 487" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+									<defs>
+										<linearGradient id="price1DGradient" x1="0" y1="0" x2="0" y2="1">
+											<stop offset="0%" stop-color="#FF8C42" stop-opacity="0.2" />
+											<stop offset="100%" stop-color="#FF8C42" stop-opacity="0" />
+										</linearGradient>
+									</defs>
+									<path
+										d="M0 454.067C36.25 432.444 72.5 416.228 108.75 405.417C145 394.605 181.25 383.794 217.5 372.983C253.75 362.172 290 345.955 326.25 324.333C362.5 302.711 398.75 275.683 435 243.25C471.25 210.817 507.5 200.005 543.75 210.817C580 221.628 616.25 210.817 652.5 178.383C688.75 145.95 725 135.139 761.25 145.95C797.5 156.761 833.75 145.95 870 113.517V486.5H0V454.067Z"
+										fill="url(#price1DGradient)"
+									/>
+									<path
+										d="M0 454.067C36.25 432.444 72.5 416.228 108.75 405.417C145 394.606 181.25 383.794 217.5 372.983C253.75 362.172 290 345.956 326.25 324.333C362.5 302.711 398.75 275.683 435 243.25C471.25 210.817 507.5 200.005 543.75 210.817C580 221.628 616.25 210.817 652.5 178.383C688.75 145.95 725 135.139 761.25 145.95C797.5 156.761 833.75 145.95 870 113.517"
+										stroke="#FF8C42"
+										stroke-width="3"
+										vector-effect="non-scaling-stroke"
+									/>
+								</svg>
 
-					<!-- Time Labels [needs to change dependant on time controls]-->
+							{:else if activeChart() === 'price-1W'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert price-1w UI here]
+								</div>
+
+							{:else if activeChart() === 'price-1M'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert price-1m UI here]
+								</div>
+
+							{:else if activeChart() === 'price-1Y'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert price-1y UI here]
+								</div>
+
+							{:else if activeChart() === 'price-ALL'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert price-all UI here]
+								</div>
+							{/if}
+						</div>
+
+					{:else if activeTab === 'yield'}
+						<!-- Yield Display -->
+						<div class="mb-6 flex items-center gap-4">
+							<h1 class="text-4xl font-bold text-grey-96">8.4%</h1>
+							<span class="rounded-lg bg-azure-27 px-3 py-1 text-sm font-bold text-azure-65">
+								Avg Annual Yield
+							</span>
+						</div>
+
+						<!-- YIELD chart -->
+						<div class="relative overflow-hidden rounded-lg border border-azure-20 bg-black/20 p-6">
+							{#if activeChart() === 'yield-1D'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert yield-1d UI here]
+								</div>
+
+							{:else if activeChart() === 'yield-1W'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert yield-1w UI here]
+								</div>
+
+							{:else if activeChart() === 'yield-1M'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert yield-1m UI here]
+								</div>
+
+							{:else if activeChart() === 'yield-1Y'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert yield-1y UI here]
+								</div>
+
+							{:else if activeChart() === 'yield-ALL'}
+								<div class="flex h-full items-center justify-center text-sm text-azure-65">
+									[insert yield-all UI here]
+								</div>
+							{/if}
+						</div>
+					{/if}
+
+					<!-- Time Labels for chart (x-axis) -->
 					<div class="absolute bottom-0 left-0 right-0 flex justify-between px-4 pb-2 text-xs">
-						{#each ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '21:00'] as time}
-							<span class="font-medium text-azure-65">{time}</span>
+						{#each activeLabels() as label}
+							<span class="font-medium text-azure-65">{label}</span>
 						{/each}
 					</div>
 				</div>
@@ -332,8 +425,9 @@
 			{#each tabs as tab, index}
 				<button
 					type="button"
-					onclick={() => handleTabClick(tab.id)}
-					class="flex flex-col items-start border-b-2 px-1 py-4 transition-colors {index > 0
+					onclick={() => (activeTabId = tab.id)}
+					class="flex flex-col items-start border-b-2 px-1 py-4 transition-colors 
+					{index > 0
 						? 'ml-8'
 						: ''} {activeTabId === tab.id
 						? 'border-crusta'
@@ -352,108 +446,136 @@
 		</nav>
 	</div>
 
-    <!-- Underlying Assets Table (horizontal scroll on smaller screens) -->
-    <div class="mt-9">
-        <!-- Scroll container -->
-        <div class="overflow-x-auto">
-            <!-- Force a minimum width so columns don't crush on small screens -->
-            <div class="min-w-[1400px] 2xl:min-w-full">
-                <!-- Column Headers -->
-                <div
-                    class="grid items-center gap-4
-            grid-cols-[minmax(320px,1.9fr)_minmax(110px,0.7fr)_minmax(100px,0.7fr)_minmax(120px,0.7fr)_minmax(90px,0.6fr)_minmax(90px,0.6fr)_minmax(110px,0.6fr)]"
-                >
-                    <span class="text-xs font-semibold uppercase tracking-wider text-azure-65">Property</span>
-                    <span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
-                        >Market cap</span
-                    >
-                    <span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
-                        >30d Chart</span
-                    >
-                    <span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
-                        >Rental Income</span
-                    >
-                    <span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
-                        >Yield %</span
-                    >
-                    <span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
-                        >Weight</span
-                    >
-                    <span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
-                        >Status</span
-                    >
-                </div>
+	<!-- Underlying Assets Table (horizontal scroll on smaller screens) -->
+	{#if activeTabId === 'underlying-assets'} 
+		<div class="mt-9">
+			<!-- Scroll container -->
+			<div class="overflow-x-auto">
+				<!-- Force a minimum width so columns don't crush on small screens -->
+				<div class="min-w-[1400px] 2xl:min-w-full">
+					<!-- Column Headers -->
+					<div
+						class="grid items-center gap-4
+				grid-cols-[minmax(320px,1.9fr)_minmax(110px,0.7fr)_minmax(100px,0.7fr)_minmax(120px,0.7fr)_minmax(90px,0.6fr)_minmax(90px,0.6fr)_minmax(110px,0.6fr)]"
+					>
+						<span class="text-xs font-semibold uppercase tracking-wider text-azure-65">Property</span>
+						<span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
+							>Market cap</span
+						>
+						<span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
+							>30d Chart</span
+						>
+						<span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
+							>Rental Income</span
+						>
+						<span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
+							>Yield %</span
+						>
+						<span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
+							>Weight</span
+						>
+						<span class="text-right text-xs font-semibold uppercase tracking-wider text-azure-65"
+							>Status</span
+						>
+					</div>
 
-                <!-- Property Rows -->
-                <div class="mt-3 flex flex-col gap-4">
-                    {#each properties as property}
-                        <div class="grid items-center gap-4 rounded-xl border border-azure-20 bg-woodsmoke px-4 py-4
-                            grid-cols-[minmax(320px,1.9fr)_minmax(110px,0.7fr)_minmax(100px,0.7fr)_minmax(120px,0.7fr)_minmax(90px,0.6fr)_minmax(90px,0.6fr)_minmax(110px,0.6fr)]">
-                            <!-- Property -->
-                            <div class="flex items-center gap-4 min-w-0">
-                                <img
-                                    src={property.image}
-                                    alt={property.name}
-                                    class="h-16 w-16 shrink-0 overflow-hidden rounded-lg"
-                                />
-                                <div class="min-w-0">
-                                    <h3 class="truncate text-lg font-bold leading-7 text-white">{property.name}</h3>
-                                    <p class="text-sm leading-5 text-azure-65">{property.type}</p>
-                                </div>
-                            </div>
+					<!-- Property Rows -->
+					<div class="mt-3 flex flex-col gap-4">
+						{#each properties as property}
+							<div class="grid items-center gap-4 rounded-xl border border-azure-20 bg-woodsmoke px-4 py-4
+								grid-cols-[minmax(320px,1.9fr)_minmax(110px,0.7fr)_minmax(100px,0.7fr)_minmax(120px,0.7fr)_minmax(90px,0.6fr)_minmax(90px,0.6fr)_minmax(110px,0.6fr)]">
+								<!-- Property -->
+								<div class="flex items-center gap-4 min-w-0">
+									<img
+										src={property.image}
+										alt={property.name}
+										class="h-16 w-16 shrink-0 overflow-hidden rounded-lg"
+									/>
+									<div class="min-w-0">
+										<h3 class="truncate text-lg font-bold leading-7 text-white">{property.name}</h3>
+										<p class="text-sm leading-5 text-azure-65">{property.type}</p>
+									</div>
+								</div>
 
-                            <!-- Market Cap -->
-                            <div class="text-right">
-                                <span class="text-base font-medium leading-6 text-white">{property.marketCap}</span>
-                            </div>
+								<!-- Market Cap -->
+								<div class="text-right">
+									<span class="text-base font-medium leading-6 text-white">{property.marketCap}</span>
+								</div>
 
-                            <!-- 30d Chart -->
-                            <div class="flex justify-end">
-                                <svg
-                                    class="opacity-70"
-                                    width="80"
-                                    height="24"
-                                    viewBox="0 0 80 24"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d={property.chartPath}
-                                        stroke="#10B981"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-                            </div>
+								<!-- 30d Chart -->
+								<div class="flex justify-end">
+									<svg
+										class="opacity-70"
+										width="80"
+										height="24"
+										viewBox="0 0 80 24"
+										fill="none"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d={property.chartPath}
+											stroke="#10B981"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+								</div>
 
-                            <!-- Rental Income -->
-                            <div class="text-right">
-                                <span class="text-base font-medium leading-6 text-white">{property.rentalIncome}</span>
-                            </div>
+								<!-- Rental Income -->
+								<div class="text-right">
+									<span class="text-base font-medium leading-6 text-white">{property.rentalIncome}</span>
+								</div>
 
-                            <!-- Yield % -->
-                            <div class="text-right">
-                                <span class="text-base leading-6 text-spring-green-45">{property.yield}</span>
-                            </div>
+								<!-- Yield % -->
+								<div class="text-right">
+									<span class="text-base leading-6 text-spring-green-45">{property.yield}</span>
+								</div>
 
-                            <!-- Weight -->
-                            <div class="text-right">
-                                <span class="text-base font-bold leading-6 text-crusta">{property.weight}</span>
-                            </div>
+								<!-- Weight -->
+								<div class="text-right">
+									<span class="text-base font-bold leading-6 text-crusta">{property.weight}</span>
+								</div>
 
-                            <!-- Status -->
-                            <div class="flex justify-end">
-                                <span
-                                    class="rounded-full bg-azure-27 px-3 py-1 text-center text-xs font-medium leading-4 text-white"
-                                >
-                                    {property.status}
-                                </span>
-                            </div>
-                        </div>
-                    {/each}
-                </div>
-            </div>
-        </div>
-    </div>
+								<!-- Status -->
+								<div class="flex justify-end">
+									<span
+										class="rounded-full bg-azure-27 px-3 py-1 text-center text-xs font-medium leading-4 text-white"
+									>
+										{property.status}
+									</span>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+		</div>
+	
+	<!-- Other tabs and UI-->
+	{:else if activeTabId === 'order-book'}
+		<div class="mt-9 rounded-xl border border-azure-20 bg-woodsmoke p-6">
+			<h3 class="text-sm font-semibold text-white">Order Book</h3>
+			<p class="mt-2 text-sm text-azure-65">[Order Book UI here]</p>
+		</div>
+
+	{:else if activeTabId === 'details'}
+		<div class="mt-9 rounded-xl border border-azure-20 bg-woodsmoke p-6">
+			<h3 class="text-sm font-semibold text-white">Details</h3>
+			<p class="mt-2 text-sm text-azure-65">[Details UI here]</p>
+		</div>
+
+	{:else if activeTabId === 'financials'}
+		<div class="mt-9 rounded-xl border border-azure-20 bg-woodsmoke p-6">
+			<h3 class="text-sm font-semibold text-white">Financials</h3>
+			<p class="mt-2 text-sm text-azure-65">[Financials UI here]</p>
+		</div>
+
+	{:else if activeTabId === 'history'}
+		<div class="mt-9 rounded-xl border border-azure-20 bg-woodsmoke p-6">
+			<h3 class="text-sm font-semibold text-white">History</h3>
+			<p class="mt-2 text-sm text-azure-65">[History UI here]</p>
+		</div>
+	{/if}
+
 </div>
