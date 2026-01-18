@@ -11,5 +11,12 @@ namespace matching {
         Price price{};
         Qty qty_remaining{};
         std::uint64_t seq{};
+
+        Order(OrderId id_,
+            UserId user_,
+            Side side_,
+            Price price_,
+            Qty qty_,
+            std::uint64_t seq_);
     };
 }

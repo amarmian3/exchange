@@ -41,7 +41,7 @@ include CMakeFiles\rules.ninja
 
 cmake_ninja_workdir = C$:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\out\build\x64-debug\
 # =============================================================================
-# Object build statements for EXECUTABLE target matching_engine
+# Object build statements for SHARED_LIBRARY target matching_engine
 
 
 #############################################
@@ -49,15 +49,8 @@ cmake_ninja_workdir = C$:\Users\Amar\Documents\Coding\exchange\engine\matching_e
 
 build cmake_object_order_depends_target_matching_engine: phony || .
 
-build CMakeFiles\matching_engine.dir\src\main.cpp.obj: CXX_COMPILER__matching_engine_unscanned_Debug C$:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\main.cpp || cmake_object_order_depends_target_matching_engine
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++20 -ZI
-  INCLUDES = -IC:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\include
-  OBJECT_DIR = CMakeFiles\matching_engine.dir
-  OBJECT_FILE_DIR = CMakeFiles\matching_engine.dir\src
-  TARGET_COMPILE_PDB = CMakeFiles\matching_engine.dir\
-  TARGET_PDB = matching_engine.pdb
-
 build CMakeFiles\matching_engine.dir\src\engine.cpp.obj: CXX_COMPILER__matching_engine_unscanned_Debug C$:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\engine.cpp || cmake_object_order_depends_target_matching_engine
+  DEFINES = -DME_BUILD_DLL -Dmatching_engine_EXPORTS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++20 -ZI
   INCLUDES = -IC:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\include
   OBJECT_DIR = CMakeFiles\matching_engine.dir
@@ -66,6 +59,25 @@ build CMakeFiles\matching_engine.dir\src\engine.cpp.obj: CXX_COMPILER__matching_
   TARGET_PDB = matching_engine.pdb
 
 build CMakeFiles\matching_engine.dir\src\book.cpp.obj: CXX_COMPILER__matching_engine_unscanned_Debug C$:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\book.cpp || cmake_object_order_depends_target_matching_engine
+  DEFINES = -DME_BUILD_DLL -Dmatching_engine_EXPORTS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++20 -ZI
+  INCLUDES = -IC:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\include
+  OBJECT_DIR = CMakeFiles\matching_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles\matching_engine.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\matching_engine.dir\
+  TARGET_PDB = matching_engine.pdb
+
+build CMakeFiles\matching_engine.dir\src\order.cpp.obj: CXX_COMPILER__matching_engine_unscanned_Debug C$:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\order.cpp || cmake_object_order_depends_target_matching_engine
+  DEFINES = -DME_BUILD_DLL -Dmatching_engine_EXPORTS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++20 -ZI
+  INCLUDES = -IC:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\include
+  OBJECT_DIR = CMakeFiles\matching_engine.dir
+  OBJECT_FILE_DIR = CMakeFiles\matching_engine.dir\src
+  TARGET_COMPILE_PDB = CMakeFiles\matching_engine.dir\
+  TARGET_PDB = matching_engine.pdb
+
+build CMakeFiles\matching_engine.dir\src\c_api.cpp.obj: CXX_COMPILER__matching_engine_unscanned_Debug C$:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\src\c_api.cpp || cmake_object_order_depends_target_matching_engine
+  DEFINES = -DME_BUILD_DLL -Dmatching_engine_EXPORTS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++20 -ZI
   INCLUDES = -IC:\Users\Amar\Documents\Coding\exchange\engine\matching_engine\include
   OBJECT_DIR = CMakeFiles\matching_engine.dir
@@ -75,21 +87,22 @@ build CMakeFiles\matching_engine.dir\src\book.cpp.obj: CXX_COMPILER__matching_en
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target matching_engine
+# Link build statements for SHARED_LIBRARY target matching_engine
 
 
 #############################################
-# Link the executable matching_engine.exe
+# Link the shared library matching_engine.dll
 
-build matching_engine.exe: CXX_EXECUTABLE_LINKER__matching_engine_Debug CMakeFiles\matching_engine.dir\src\main.cpp.obj CMakeFiles\matching_engine.dir\src\engine.cpp.obj CMakeFiles\matching_engine.dir\src\book.cpp.obj
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -ZI
-  LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
+build matching_engine.dll matching_engine.lib: CXX_SHARED_LIBRARY_LINKER__matching_engine_Debug CMakeFiles\matching_engine.dir\src\engine.cpp.obj CMakeFiles\matching_engine.dir\src\book.cpp.obj CMakeFiles\matching_engine.dir\src\order.cpp.obj CMakeFiles\matching_engine.dir\src\c_api.cpp.obj
+  LANGUAGE_COMPILE_FLAGS = /DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -ZI
+  LINK_FLAGS = /machine:x64 /debug /INCREMENTAL
   LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   OBJECT_DIR = CMakeFiles\matching_engine.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
+  RESTAT = 1
   TARGET_COMPILE_PDB = CMakeFiles\matching_engine.dir\
-  TARGET_FILE = matching_engine.exe
+  TARGET_FILE = matching_engine.dll
   TARGET_IMPLIB = matching_engine.lib
   TARGET_PDB = matching_engine.pdb
 
@@ -119,7 +132,7 @@ build rebuild_cache: phony CMakeFiles\rebuild_cache.util
 # =============================================================================
 # Target aliases.
 
-build matching_engine: phony matching_engine.exe
+build matching_engine: phony matching_engine.dll
 
 # =============================================================================
 # Folder targets.
@@ -129,7 +142,7 @@ build matching_engine: phony matching_engine.exe
 #############################################
 # Folder: C:/Users/Amar/Documents/Coding/exchange/engine/matching_engine/out/build/x64-debug
 
-build all: phony matching_engine.exe
+build all: phony matching_engine.dll
 
 # =============================================================================
 # Built-in targets

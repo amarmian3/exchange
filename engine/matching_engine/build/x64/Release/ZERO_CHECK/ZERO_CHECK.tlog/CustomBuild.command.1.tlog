@@ -1,0 +1,10 @@
+^C:\USERS\AMAR\DOCUMENTS\CODING\EXCHANGE\ENGINE\MATCHING_ENGINE\BUILD\CMAKEFILES\CCCA1F74D80BA308E1F9AFD0593A5662\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/Amar/Documents/Coding/exchange/engine/matching_engine -BC:/Users/Amar/Documents/Coding/exchange/engine/matching_engine/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Amar/Documents/Coding/exchange/engine/matching_engine/build/matching_engine.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

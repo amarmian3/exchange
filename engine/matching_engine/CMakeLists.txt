@@ -12,14 +12,31 @@ endif()
 project ("matching_engine")
 
 # Add source to this project's executable.
-add_executable(matching_engine
-  src/main.cpp
+add_library(matching_engine SHARED
   src/engine.cpp
   src/book.cpp
+  src/order.cpp
+  src/c_api.cpp
 )
-target_include_directories(matching_engine PRIVATE
+target_include_directories(matching_engine PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+# ---- Output locations (consistent across platforms) ----
+# Windows (multi-config): build/<Config>/
+# macOS/Linux (single-config): build/
+set_target_properties(matching_engine PROPERTIES
+  OUTPUT_NAME "matching_engine"
+
+  # Put DLL/.so/.dylib in predictable places:
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+)
+
+set_property(TARGET matching_engine PROPERTY CXX_STANDARD 20)
+
+target_compile_definitions(matching_engine PRIVATE ME_BUILD_DLL)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET matching_engine PROPERTY CXX_STANDARD 20)

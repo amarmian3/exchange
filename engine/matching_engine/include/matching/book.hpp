@@ -25,6 +25,14 @@ namespace matching {
 
 		const Symbol& symbol() const { return symbol_; }
 
+		const std::map<Price, std::deque<Order>, std::greater<Price>>& bids() const {
+			return bids_;
+		}
+
+		const std::map<Price, std::deque<Order>, std::less<Price>>& asks() const {
+			return asks_;
+		}
+
 	private:
 		Symbol symbol_;
 
@@ -39,7 +47,9 @@ namespace matching {
 		std::map<Price, Level, std::less<Price>> asks_;
 
 		// helpers
-		static bool crosses(Side taker_side, Price taker_price, Price maker_price);
+		static bool crosses(Side  incoming_side,
+			Price incoming_price,
+			Price resting_price);
 	};
 
 } 

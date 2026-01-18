@@ -1,23 +1,17 @@
 from __future__ import annotations
-from typing import Any, Literal
+from typing import Any
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from api.services.matching import with_engine_lock, get_engine
 
-Side = Literal[0, 1]
+from enum import IntEnum
+
+class Side(IntEnum):
+    BUY = 0
+    SELL = 1
 
 router = APIRouter()
-
-class PlaceLimitRequest(BaseModel):
-    symbol: str = Field(..., examples=["EURUSD"])
-    user: str = Field(..., examples=["u1"])
-    side: Side = Field(..., description="0=Bid, 1=Ask")
-    price: int = Field(..., ge=0)
-    qty: int = Field(..., gt=0)
-
-class CancelRequest(BaseModel):
-    symbol: str
 
 class EngineResponse(BaseModel):
     symbol: str
@@ -25,22 +19,31 @@ class EngineResponse(BaseModel):
     rc: int
     raw: dict[str, Any]
 
+
 @router.post("/orders", response_model=EngineResponse)
-def place_limit(req: PlaceLimitRequest):
+def place_limit(    
+    symbol: str,
+    user: str,
+    side: Side,
+    price: int,
+    qty: int,
+    ) -> EngineResponse:
     try:
         eng = get_engine()
         with with_engine_lock():
-            eng.place_limit(req.symbol, req.user, req.side, req.price, req.qty)
+            res = eng.place_limit(symbol, user, side, price, qty)
+
+        return EngineResponse(symbol=res.symbol, events=res.events, rc=res.rc, raw=res.raw)
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/orders/{order_id}", response_model=EngineResponse)
-def cancel(order_id: int, req: CancelRequest):
+def cancel(order_id: int, symbol: str):
     try:
         eng = get_engine()
         with with_engine_lock():
-            res = eng.cancel(req.symbol, order_id)
+            res = eng.cancel(symbol, order_id)
             
         return EngineResponse(symbol=res.symbol, events=res.events, rc=res.rc, raw=res.raw)
     except Exception as e:
@@ -56,3 +59,7 @@ def show_orderbook(symbol: str) -> EngineResponse:
         return EngineResponse(symbol=res.symbol, events=res.events, rc=res.rc, raw=res.raw)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+# TODO: Each user should be able to query what they bids and asks they have
+# TODO: Each user should be able to see what they own
+# TODO: Fetch a list of all events which have occured on the orderbook since open
