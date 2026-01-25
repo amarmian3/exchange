@@ -23,23 +23,24 @@ target_include_directories(matching_engine PUBLIC
 )
 
 # ---- Output locations (consistent across platforms) ----
-# Windows (multi-config): build/<Config>/
-# macOS/Linux (single-config): build/
+# Multi-config (Visual Studio, Xcode, Ninja Multi-Config): build/<Config>/
+# Single-config (Ninja, Unix Makefiles): the build directory itself (e.g. build/Release)
+
+if (CMAKE_CONFIGURATION_TYPES)
+  set(_out_dir "${CMAKE_BINARY_DIR}/$<CONFIG>")
+else()
+  set(_out_dir "${CMAKE_BINARY_DIR}")
+endif()
+
 set_target_properties(matching_engine PROPERTIES
   OUTPUT_NAME "matching_engine"
-
-  # Put DLL/.so/.dylib in predictable places:
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>"
+  RUNTIME_OUTPUT_DIRECTORY "${_out_dir}"
+  LIBRARY_OUTPUT_DIRECTORY "${_out_dir}"
+  ARCHIVE_OUTPUT_DIRECTORY "${_out_dir}"
 )
-
-set_property(TARGET matching_engine PROPERTY CXX_STANDARD 20)
 
 target_compile_definitions(matching_engine PRIVATE ME_BUILD_DLL)
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET matching_engine PROPERTY CXX_STANDARD 20)
-endif()
-
-# TODO: Add tests and install targets if needed.
+set_property(TARGET matching_engine PROPERTY CXX_STANDARD 20)
+set_property(TARGET matching_engine PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET matching_engine PROPERTY CXX_EXTENSIONS OFF)

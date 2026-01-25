@@ -1,5 +1,0 @@
-# ninja log v6
-31	1270	7885511139900107	CMakeFiles/matching_engine.dir/src/book.cpp.obj	3e06c41dab8584bd
-20	1367	7885511139780884	CMakeFiles/matching_engine.dir/src/engine.cpp.obj	731958bde3d9ef38
-9	1531	7885511139671171	CMakeFiles/matching_engine.dir/src/main.cpp.obj	bb8689fcbf00f570
-1531	1984	7885511154899315	matching_engine.exe	cb176e9365ba5d1a
