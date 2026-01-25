@@ -15,7 +15,9 @@ case "$OS" in
     ;;
   Darwin)
     echo "Building matching_engine (macOS/clang)..."
-    cmake -S . -B "$BUILD_DIR/$CONFIG" -DCMAKE_BUILD_TYPE="$CONFIG"
+    cmake -S . -B "$BUILD_DIR/$CONFIG" \
+      -DCMAKE_BUILD_TYPE="$CONFIG" \
+      -DCMAKE_OSX_ARCHITECTURES=arm64
     cmake --build "$BUILD_DIR/$CONFIG" -j
     ;;
   Linux)
