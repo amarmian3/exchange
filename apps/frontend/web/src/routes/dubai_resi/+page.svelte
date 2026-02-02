@@ -2,9 +2,9 @@
 	//API logic
 		import { onDestroy } from 'svelte';
 		import { apiGet } from '$lib/api/client';
-		import type { Orderbook } from '$lib/api/types';
+		import type { Orderbook } from '$lib/api/type';
 
-		const MARKET = 'dubai_resi';
+		const SYMBOL = 'REI';
 
 		// Orderbook state (typed)
 		let orderbook = $state<Orderbook | null>(null);
@@ -18,7 +18,7 @@
 			orderbookError = null;
 
 			// ✅ Always call your own proxy (stable)
-			orderbook = await apiGet<Orderbook>(fetch,`/api/orderbook/${MARKET}?depth=20`);
+			orderbook = await apiGet<Orderbook>(fetch,`/api/orderbook/${SYMBOL}?depth=20`);
 		} catch (e) {
 			orderbookError = e instanceof Error ? e.message : 'Failed to load order book';
 			orderbook = null;
@@ -29,7 +29,7 @@
 
 		// initial load + polling (MVP)
 		fetchOrderbook();
-		const obTimer = setInterval(fetchOrderbook, 1000);	//change this later to: if changes -> poll -> here are changes -> push to UI
+		const obTimer = setInterval(fetchOrderbook, 10000);	//change this later to: if changes -> poll -> here are changes -> push to UI
 		onDestroy(() => clearInterval(obTimer));
 
 		//Buy button posting to backend
@@ -37,41 +37,50 @@
 		let buyError = $state<string | null>(null);
 		let buysuccess = $state(false);
 
+		//creating funcition from backend for best asks and best bids (this can be remoced later as bestask is computed in api/orders/server.ts)
+		const bestAskPrice = $derived(() => orderbook?.asks?.[0]?.price ?? null);
+		const bestBidPrice = $derived(() => orderbook?.bids?.[0]?.price ?? null);
+
+		//Needed later for when we want to show Total amount e.g. price * quanitty
+		//const totalCost = $derived(() => {
+		//const p = Number(price.replace(/,/g, '').trim());
+		//const q = Number(quantity.replace(/,/g, '').trim());
+		//if (!Number.isFinite(p) || !Number.isFinite(q)) return null;
+		//return p * q;
+		//});
+
+
 		async function handleBuy() {
 			buySubmitting = true;
 			buyError = null;
 			buysuccess = false;
 
 			try {
-				// 1) Parse payment input (e.g. "5,000" -> 5000)
-				const amount = Number(payment.replace(/,/g, '').trim());
-				if (!Number.isFinite(amount) || amount <= 0) {
-				throw new Error('Enter a valid payment amount.');
-				}
+				const p = Number(price.replace(/,/g, '').trim());
+				const q = Number(quantity.replace(/,/g, '').trim());
 
-				// 2) Get best ask from current orderbook
+				if (!Number.isFinite(p) || p <= 0) throw new Error('Enter a valid price.');
+				if (!Number.isFinite(q) || q <= 0) throw new Error('Enter a valid quantity.');
+
+				// Optional UX guard (matching-engine truth is still backend):
 				const bestAsk = orderbook?.asks?.[0];
-				if (!bestAsk) {
-				throw new Error('No asks available (orderbook empty).');
+				if (!bestAsk) throw new Error('No asks available (orderbook empty).');
+
+				// If user places below best ask, it likely won't fill immediately
+				// (it would rest on the book). If your MVP supports resting orders then delete this
+				if (p < bestAsk.price) {
+				throw new Error(`Your price is below best ask (${bestAsk.price.toFixed(2)}). This order won’t fill.`);
 				}
 
-				const tokenPrice = bestAsk.price; // price of 1 token
-				if (!Number.isFinite(tokenPrice) || tokenPrice <= 0) {
-				throw new Error('Invalid best ask price.');
-				}
-
-				// 3) Convert amount -> quantity
-				const quantity = amount / tokenPrice;
-
-				// 4) Send order to your proxy route (POST /api/orders)
 				const res = await fetch('/api/orders', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
-					symbol: 'REI',
+					symbol: SYMBOL,
+					user: 'test', // In production, get from auth context/session
 					side: 'buy',
-					price: tokenPrice,
-					quantity
+					price: p,
+					quantity: q
 				})
 				});
 
@@ -79,13 +88,14 @@
 				const msg = await res.text();
 				throw new Error(msg || `Order failed (${res.status})`);
 				}
+
 				buysuccess = true;
 			} catch (e) {
 				buyError = e instanceof Error ? e.message : 'Order failed';
 			} finally {
 				buySubmitting = false;
 			}
-		}
+			}
 		
 
 	// ---- Timeframes ----
@@ -106,8 +116,8 @@
 	// ---- States ----
 	let activeTimeframe = $state<Timeframe>('1D');
 	let activeTab = $state<'price' | 'yield'>('price');
-	let payment = $state('5,000');
-	let receive = $state('3.997');
+	let price = $state('');
+	let quantity = $state('');
 	let tradingMode = $state<'buy' | 'sell'>('buy');
 	let activeTabId = $state<TabId>('underlying-assets');
 
@@ -353,21 +363,22 @@
 
 					<!-- Input Fields -->
 					<div class="mt-5 space-y-4">
-						<!-- Payment Amount -->
+						<!-- Price Amount -->
 						<div>
 							<span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-gray">
-								Payment Amount
+								Price
 							</span>
 							<div class="relative">
 								<input
 									type="text"
-									bind:value={payment}
+									bind:value={price}
+									placeholder={bestAskPrice()?.toFixed(2) ?? '0.00'}
 									class="w-full rounded-lg border border-azure-27 bg-transparent px-4 py-3 text-lg font-medium text-white focus:border-crusta focus:outline-none focus:ring-1 focus:ring-crusta"
 								/>
 								<span
 									class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-azure-65"
 								>
-									USDC
+									AED
 								</span>
 							</div>
 						</div>
@@ -375,12 +386,12 @@
 						<!-- Receive Amount -->
 						<div>
 							<span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-gray">
-								Receive (Estimated)
+								Quantity
 							</span>
 							<div class="relative">
 								<input
 									type="text"
-									bind:value={receive}
+									bind:value={quantity}
 									class="w-full rounded-lg border border-azure-27 bg-transparent px-4 py-3 text-lg font-medium text-white focus:border-crusta focus:outline-none focus:ring-1 focus:ring-crusta"
 								/>
 								<span
@@ -674,14 +685,3 @@
 		</div>
 	{/if}
 </div>
-
-<!-- Debugging for orderbook-->
-{#if orderbookLoading}
-  <p class="text-xs text-gray-400">Loading orderbook…</p>
-{:else if orderbookError}
-  <p class="text-xs text-red-500">{orderbookError}</p>
-{:else if orderbook}
-  <pre class="text-xs text-white">
-    {JSON.stringify(orderbook, null, 2)}
-  </pre>
-{/if}

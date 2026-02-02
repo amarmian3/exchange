@@ -19,12 +19,14 @@ export type SeriesPoint = { t: string; v: number }; // t can be ISO or label
 export type OrderbookLevel = { price: number; size: number; total: number };
 
 export type Orderbook = {
+  symbol: string;
   bids: OrderbookLevel[];
   asks: OrderbookLevel[];
   bestBid: number | null;
   bestAsk: number | null;
   spreadAbs: number | null;
   spreadPct: number | null;
+  ts: number;
 };
 
 export type UnderlyingAsset = {

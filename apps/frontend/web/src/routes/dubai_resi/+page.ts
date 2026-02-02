@@ -1,16 +1,19 @@
 import type { PageLoad } from './$types';
 import { apiGet } from '$lib/api/client';
-import type { IndexSummary, Orderbook, UnderlyingAsset, SeriesPoint } from '$lib/api/types';
+import type { Orderbook } from '$lib/api/type'; // <-- change to /types if you renamed the file
 
 export const load: PageLoad = async ({ fetch }) => {
-  const indexId = 'dubai-resi';
+  const symbol = 'REI';
 
-  const [summary, orderbook, assets, priceSeries] = await Promise.all([
-    apiGet<IndexSummary>(fetch, `/v1/indexes/${indexId}/summary`),
-    apiGet<Orderbook>(fetch, `/v1/indexes/${indexId}/orderbook?depth=20`),
-    apiGet<UnderlyingAsset[]>(fetch, `/v1/indexes/${indexId}/assets`),
-    apiGet<SeriesPoint[]>(fetch, `/v1/indexes/${indexId}/series?metric=price&tf=1D`)
-  ]);
+  // Only fetch what your backend actually supports right now
+  const orderbook = await apiGet<Orderbook>(fetch, `/api/orderbook/${symbol}?depth=20`);
 
-  return { indexId, summary, orderbook, assets, priceSeries };
+  // Return placeholders for the rest (until you implement those APIs)
+  return {
+    symbol,
+    orderbook,
+    summary: null,
+    assets: [],
+    priceSeries: []
+  };
 };
