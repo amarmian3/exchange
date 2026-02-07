@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { PUBLIC_API_BASE_URL } from '$env/static/public';
+import { pool } from '$lib/server/db';
 
 type PlaceOrderRequest = {
   symbol: string;           // "REI"
@@ -17,7 +18,6 @@ function mapSide(side: 'buy' | 'sell') {
 export async function POST({ request, fetch }) {
   let body: PlaceOrderRequest;
 
-  // Safer JSON parsing -> return 400 instead of crashing with a 500
   try {
     body = (await request.json()) as PlaceOrderRequest;
   } catch {
@@ -29,21 +29,33 @@ export async function POST({ request, fetch }) {
   if (!Number.isFinite(body.price) || body.price <= 0) throw error(400, 'Invalid price');
   if (!Number.isFinite(body.quantity) || body.quantity <= 0) throw error(400, 'Invalid quantity');
 
-  // Placeholder user (until auth)
-  const user = body.user?.trim() || 'test';
+  // IMPORTANT: your DB expects user_id UUID.
+  // For testing: if UI doesn’t pass a UUID, fallback to first user in DB.
+  let userId: string = body.user?.trim() || '';
 
-  // Swagger shows these are query params: symbol, user, side, price, qty
+  if (!userId) {
+    const u = await pool.query(`select id from users order by created_at asc limit 1`);
+    if (!u.rows.length) throw error(400, 'No users in DB. Create a user row first.');
+    userId = u.rows[0].id as string;
+  }
+
+  // Resolve index_id from symbol
+  const symbol = body.symbol.trim();
+  const idx = await pool.query(`select id from indexes where symbol = $1 limit 1`, [symbol]);
+  if (!idx.rows.length) throw error(400, `No index found for symbol "${symbol}"`);
+  const indexId = idx.rows[0].id;
+
+  // Call engine
   const params = new URLSearchParams({
-    symbol: body.symbol.trim(),
-    user,
+    symbol,
+    user: userId, // pass UUID string through; engine currently accepts "user" as string
     side: String(mapSide(body.side)),
     price: String(body.price),
-    qty: String(body.quantity) // map "quantity" -> "qty"
+    qty: String(body.quantity)
   });
 
   const engineUrl = `${PUBLIC_API_BASE_URL}/v1/orders?${params.toString()}`;
 
-  // Timeout so the UI doesn’t hang forever
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6000);
 
@@ -56,12 +68,19 @@ export async function POST({ request, fetch }) {
 
     const text = await res.text();
 
-    // Try to extract a useful error message
+    // Save to DB (accepted/rejected)
+    const status = res.ok ? 'accepted' : 'rejected';
+
+    await pool.query(
+      `insert into orders (user_id, index_id, side, price, quantity, status, created_at)
+       values ($1::uuid, $2::uuid, $3, $4, $5, $6, now())`,
+      [userId, indexId, body.side, body.price, body.quantity, status]
+    );
+
     if (!res.ok) {
       throw error(res.status, text || `Engine order failed: ${res.status}`);
     }
 
-    // Pass through JSON if possible
     try {
       return json(JSON.parse(text));
     } catch {
@@ -76,3 +95,10 @@ export async function POST({ request, fetch }) {
     clearTimeout(timeout);
   }
 }
+
+
+
+
+
+
+

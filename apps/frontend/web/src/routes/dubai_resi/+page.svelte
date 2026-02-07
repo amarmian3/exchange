@@ -73,15 +73,14 @@
 				}
 
 				const res = await fetch('/api/orders', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					symbol: SYMBOL,
-					user: 'test', // In production, get from auth context/session
-					side: 'buy',
-					price: p,
-					quantity: q
-				})
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						symbol: SYMBOL,
+						side: 'buy',
+						price: p,
+						quantity: q
+					})
 				});
 
 				if (!res.ok) {
