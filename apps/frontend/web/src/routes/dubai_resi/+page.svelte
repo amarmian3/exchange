@@ -1,13 +1,34 @@
 <script lang="ts">
 	//API logic
-		import { onDestroy } from 'svelte';
-		import { apiGet } from '$lib/api/client';
-		import type { Orderbook } from '$lib/api/type';
+		import { onDestroy, onMount } from 'svelte';
+		import { apiGET } from '$api/engine/client';
+		import { apiPOST } from '$api/engine/client';
+		import { type OrderBookResponse, type PlaceOrder } from '$api/engine/type';
+		import { Side }  from '$api/engine/type';
 
 		const SYMBOL = 'REI';
 
+		// ... your state + fetchOrderbook() function stays the same ...
+
+		let obTimer: ReturnType<typeof setInterval> | null = null;
+
+		onMount(() => {
+			fetchOrderbook(); // ✅ only runs in browser
+			obTimer = setInterval(fetchOrderbook, 10_000);
+
+			// cleanup function runs on unmount
+			return () => {
+			if (obTimer) clearInterval(obTimer);
+			};
+		});
+
+		onDestroy(() => {
+			if (obTimer) clearInterval(obTimer);
+		});
+
+
 		// Orderbook state (typed)
-		let orderbook = $state<Orderbook | null>(null);
+		let orderbook = $state<OrderBookResponse | null>(null);
 		let orderbookLoading = $state(true);
 		let orderbookError = $state<string | null>(null);
 
@@ -17,8 +38,8 @@
 			orderbookLoading = true;
 			orderbookError = null;
 
-			// ✅ Always call your own proxy (stable)
-			orderbook = await apiGet<Orderbook>(fetch,`/api/orderbook/${SYMBOL}?depth=20`);
+			// Direct call via helper
+			orderbook = await apiGET(SYMBOL);
 		} catch (e) {
 			orderbookError = e instanceof Error ? e.message : 'Failed to load order book';
 			orderbook = null;
@@ -27,19 +48,14 @@
 		}
 		}
 
-		// initial load + polling (MVP)
-		fetchOrderbook();
-		const obTimer = setInterval(fetchOrderbook, 10000);	//change this later to: if changes -> poll -> here are changes -> push to UI
-		onDestroy(() => clearInterval(obTimer));
-
-		//Buy button posting to backend
+		//Buy button states
 		let buySubmitting = $state(false);
 		let buyError = $state<string | null>(null);
 		let buysuccess = $state(false);
 
-		//creating funcition from backend for best asks and best bids (this can be remoced later as bestask is computed in api/orders/server.ts)
-		const bestAskPrice = $derived(() => orderbook?.asks?.[0]?.price ?? null);
-		const bestBidPrice = $derived(() => orderbook?.bids?.[0]?.price ?? null);
+		//best bid/ask dervied from RAW book (UI computed)
+		const bestAskPrice = $derived(() => orderbook?.raw?.asks?.[0]?.price ?? null);
+		const bestBidPrice = $derived(() => orderbook?.raw?.bids?.[0]?.price ?? null);
 
 		//Needed later for when we want to show Total amount e.g. price * quanitty
 		//const totalCost = $derived(() => {
@@ -49,7 +65,7 @@
 		//return p * q;
 		//});
 
-
+		//POST function (place order)
 		async function handleBuy() {
 			buySubmitting = true;
 			buyError = null;
@@ -62,39 +78,28 @@
 				if (!Number.isFinite(p) || p <= 0) throw new Error('Enter a valid price.');
 				if (!Number.isFinite(q) || q <= 0) throw new Error('Enter a valid quantity.');
 
-				// Optional UX guard (matching-engine truth is still backend):
-				const bestAsk = orderbook?.asks?.[0];
-				if (!bestAsk) throw new Error('No asks available (orderbook empty).');
+				// Build the exact payload your apiPOST expects (matches your PlaceOrder type)
+				const order: PlaceOrder = {
+				symbol: SYMBOL,
+				user: 'test',      // until auth
+				side: Side.Buy,    // 0
+				price: p,
+				qty: q
+				};
 
-				// If user places below best ask, it likely won't fill immediately
-				// (it would rest on the book). If your MVP supports resting orders then delete this
-				if (p < bestAsk.price) {
-				throw new Error(`Your price is below best ask (${bestAsk.price.toFixed(2)}). This order won’t fill.`);
-				}
-
-				const res = await fetch('/api/orders', {
-					method: 'POST',
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({
-						symbol: SYMBOL,
-						side: 'buy',
-						price: p,
-						quantity: q
-					})
-				});
-
-				if (!res.ok) {
-				const msg = await res.text();
-				throw new Error(msg || `Order failed (${res.status})`);
-				}
+				//imported apiPOST (no direct fetch here)
+				await apiPOST(order, fetch);
 
 				buysuccess = true;
+
+				// Refresh the book after placing an order (MVP correctness)
+				await fetchOrderbook();
 			} catch (e) {
 				buyError = e instanceof Error ? e.message : 'Order failed';
 			} finally {
 				buySubmitting = false;
 			}
-			}
+		}
 		
 
 	// ---- Timeframes ----
@@ -450,7 +455,7 @@
 						{:else if orderbookError}
 							<div class="px-1 py-2 text-[11px] text-red">{orderbookError}</div>
 						{:else}
-							{#each (orderbook?.asks ?? []) as lvl}
+							{#each (orderbook?.raw?.asks ?? []) as lvl}
 								<div class="relative grid grid-cols-3 gap-4 rounded px-1 py-1">
 									<!-- (Optional) depth bar: you can add later -->
 									<div class="relative z-10 text-[11px] font-semibold text-red">
@@ -487,7 +492,7 @@
 
 					<!-- Buy Orders (connected to backend) -->
 					<div class="space-y-0.5">
-						{#each (orderbook?.bids ?? []) as lvl}
+						{#each (orderbook?.raw?.bids ?? []) as lvl}
 							<div class="relative grid grid-cols-3 gap-4 rounded px-1 py-1">
 								<div class="relative z-10 text-[11px] font-semibold text-spring-green-45">
 								{lvl.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
