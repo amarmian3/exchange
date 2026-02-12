@@ -1,0 +1,33 @@
+[project]
+name = "algorand"
+version = "0.1.0"
+description = "Algorand smart contracts"
+authors = [{ name = "stoosy", email = "sheztoosy@gmail.com" }]
+requires-python = ">=3.12,<4"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "algokit-utils>=4.0.0,<5",
+    "python-dotenv>=1.0.0,<2",
+    "algorand-python>=3,<4",
+    "algorand-python-testing>=1,<2",
+]
+
+[dependency-groups]
+dev = [
+    "algokit-client-generator>=2.1.0,<3",
+    "puyapy",
+]
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
+
